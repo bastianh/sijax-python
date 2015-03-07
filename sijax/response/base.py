@@ -13,7 +13,6 @@ from __future__ import (absolute_import, unicode_literals)
     :license: BSD, see LICENSE.txt for more details.
 """
 
-
 from builtins import object
 from ..helper import json
 from ..exception import SijaxError
@@ -56,11 +55,12 @@ class BaseResponse(object):
                              was invoked with
         """
         self._commands = []
+        self._extra_data = {}
         self._sijax = sijax_instance
         self._request_args = request_args
         self.dumps = partial(json.dumps, ensure_ascii=self.JSON_AS_ASCII,
-                separators=self.JSON_SEPARATORS, indent=self.JSON_INDENT,
-                sort_keys=self.JSON_SORT_KEYS)
+                             separators=self.JSON_SEPARATORS, indent=self.JSON_INDENT,
+                             sort_keys=self.JSON_SORT_KEYS)
 
     def _get_request_args(self):
         """Returns the arguments list to pass to callbacks.
@@ -70,7 +70,7 @@ class BaseResponse(object):
         """
         return self._request_args
 
-    def _add_command(self, cmd_type, params = None):
+    def _add_command(self, cmd_type, params=None):
         """Adds a raw command to the buffer to send to the client."""
         if params is None:
             params = {}
@@ -78,6 +78,13 @@ class BaseResponse(object):
 
         self._commands.append(params)
         return self
+
+    def set_data(self, key, value):
+        """ setzt einen key für die response
+        :param key: key
+        :param value: value
+        """
+        self._extra_data[key] = value
 
     def clear_commands(self):
         """Clears the commands buffer.
@@ -242,7 +249,7 @@ class BaseResponse(object):
             func_params = []
 
         if (not isinstance(func_params, list) and
-            not isinstance(func_params, tuple)):
+                not isinstance(func_params, tuple)):
             raise SijaxError('call() expects a list, a tuple or '
                              'None for the args list')
 
@@ -251,14 +258,6 @@ class BaseResponse(object):
             'params': func_params
         }
         return self._add_command(self.__class__.COMMAND_CALL, params)
-
-    def _get_json(self):
-        """Returns a JSON representation of the commands buffer list.
-
-        The client side code will loop over the list and execute all the
-        commands in order.
-        """
-        return self.dumps(self._commands)
 
     def _perform_handler_call(self, callback, args):
         """Performs the actual calling of the Sijax handler function.
@@ -275,6 +274,7 @@ class BaseResponse(object):
             # or that the function itself raised a TypeError.
             # We can determine which is it by inspecting the traceback.
             import sys, traceback
+
             stack_entries = traceback.extract_tb(sys.exc_info()[2])
             if len(stack_entries) != 1:
                 # TypeError raised from somewhere within the Sijax handler
@@ -310,9 +310,9 @@ class BaseResponse(object):
         a list of commands that we need to pass to the browser (in order).
 
         :param call_chain: a list of two-tuples (callback, args list) to call
-        :return: JSON string to be passed to the browser
+        :return: commands array
         """
         for callback, args in call_chain:
             self._process_callback(callback, args)
-        return self._get_json()
+        return self._commands
 

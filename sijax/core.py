@@ -18,6 +18,7 @@ from .helper import json
 from .response.base import BaseResponse
 from .exception import SijaxError
 
+
 class Sijax(object):
     """The main Sijax object is what manages function registration and calling.
 
@@ -127,7 +128,7 @@ class Sijax(object):
         with what arguments.
         """
         self._data = data
-        self._request_args = None # cache invalidation
+        self._request_args = None  # cache invalidation
         return self
 
     def get_data(self):
@@ -344,7 +345,9 @@ class Sijax(object):
             (callback, call_args),
             (self._events[cls.EVENT_AFTER_PROCESSING], [])
         ]
-        return obj_response._process_call_chain(call_chain)
+        data = {"commands": obj_response._process_call_chain(call_chain)}
+        data.update(obj_response._extra_data)
+        return json.dumps(data)
 
     def register_event(self, event_name, callback):
         """Register a callback function to be called when the event occurs.
