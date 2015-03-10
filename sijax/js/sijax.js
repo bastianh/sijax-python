@@ -79,6 +79,19 @@ Sijax.process_call = function (params) {
     callback.apply(null, params.params);
 };
 
+Sijax.process_delayed = function (params) {
+    setTimeout(function(){
+        jQuery.ajax({
+            "url": params.url,
+            "type": "POST",
+            "cache": false,
+            "dataType": "json",
+            "data": {},
+            "success": Sijax.processCommands
+        });
+    }, params.time*1000);
+};
+
 Sijax.request = function (functionName, callArgs, requestParams) {
     if (! callArgs) {
         callArgs = [];

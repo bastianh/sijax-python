@@ -27,6 +27,7 @@ class BaseResponse(object):
     """
 
     COMMAND_ALERT = 'alert'
+    COMMAND_DELAYED = 'delayed'
     COMMAND_HTML = 'html'
     COMMAND_SCRIPT = 'script'
     COMMAND_ATTR = 'attr'
@@ -99,6 +100,11 @@ class BaseResponse(object):
         """
         self._commands = []
         return self
+
+    def delayed(self, url, time=3):
+        """Asks to retry to get the Response after time from the url"""
+        params = {'url': url, 'time': time}
+        return self._add_command(self.__class__.COMMAND_DELAYED, params)
 
     def alert(self, message):
         """Sends a ``window.alert`` command to the browser.
@@ -315,4 +321,3 @@ class BaseResponse(object):
         for callback, args in call_chain:
             self._process_callback(callback, args)
         return self._commands
-
